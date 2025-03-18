@@ -1,8 +1,10 @@
 package main
 
+import "github/hassanharga/go-api/internal/env"
+
 func main() {
 	app := &application{
-		config: config{addr: ":8080"},
+		config: config{addr: env.GetString("ADDR", ":8080")},
 	}
 
 	// initialize the server mux
