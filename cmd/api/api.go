@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github/hassanharga/go-api/internal/store"
 	"log"
 	"net/http"
 	"time"
@@ -15,6 +16,7 @@ type config struct {
 
 type application struct {
 	config
+	store store.Storage
 }
 
 // initialize the server chi and create routes
