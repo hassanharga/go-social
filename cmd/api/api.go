@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github/hassanharga/go-api/internal/store"
+	"github/hassanharga/go-social/internal/store"
 	"log"
 	"net/http"
 	"time"

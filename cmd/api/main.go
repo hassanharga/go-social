@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github/hassanharga/go-api/internal/db"
-	"github/hassanharga/go-api/internal/env"
-	"github/hassanharga/go-api/internal/store"
+	"github/hassanharga/go-social/internal/db"
+	"github/hassanharga/go-social/internal/env"
+	"github/hassanharga/go-social/internal/store"
 	"log"
 )
 
