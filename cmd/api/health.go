@@ -1,12 +1,17 @@
 package main
 
-import "net/http"
+import (
+	"github/hassanharga/go-social/utils"
+	"net/http"
+)
 
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	// Set the Content-Type header to application/json
-	w.Header().Set("Content-Type", "application/json")
-
-	// Write a JSON response with a 200 OK status
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status":"OK"}`))
+	data := map[string]string{
+		"status":  "ok",
+		"env":     app.config.env,
+		"version": app.config.version,
+	}
+	if err := utils.WriteJson(w, http.StatusOK, data); err != nil {
+		utils.WriteJsonError(w, http.StatusInternalServerError, err.Error())
+	}
 }
