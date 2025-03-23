@@ -11,8 +11,8 @@ import (
 )
 
 type createPostPayload struct {
-	Title   string   `json:"title"`
-	Content string   `json:"content"`
+	Title   string   `json:"title" validate:"required,max=100"`
+	Content string   `json:"content" validate:"required,max=1000"`
 	Tags    []string `json:"tags"`
 }
 
@@ -23,7 +23,12 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		app.badRequestError(w, r, err)
 		return
 	}
-	defer r.Body.Close()
+
+	// validate the payload
+	if err := utils.Validate.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
 
 	post := &store.Post{
 		Title:   payload.Title,
@@ -31,6 +36,8 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		Tags:    payload.Tags,
 		UserID:  1, // TODO: get user id from context
 	}
+
+	// validate the payload
 	ctx := r.Context()
 
 	if err := app.store.Posts.Create(ctx, post); err != nil {
