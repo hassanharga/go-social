@@ -7,13 +7,14 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("record not found")
+	ErrNotFound = errors.New("not found")
 )
 
 type Storage struct {
 	Posts interface {
 		Create(context.Context, *Post) error
 		GetById(context.Context, int64) (*Post, error)
+		Delete(context.Context, int64) error
 	}
 	Comments interface {
 		// Create(context.Context, *Comment) error

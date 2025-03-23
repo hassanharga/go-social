@@ -53,7 +53,7 @@ func (app *application) mount() http.Handler {
 			r.Route("/{id}", func(r chi.Router) {
 				r.Get("/", app.getPostHandler)
 				// r.Put("/", app.updatePostHandler)
-				// r.Delete("/", app.deletePostHandler)
+				r.Delete("/", app.deletePostHandler)
 			})
 		})
 		// user routers
