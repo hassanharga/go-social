@@ -23,7 +23,7 @@ type Storage struct {
 		Update(context.Context, *Post) error
 	}
 	Comments interface {
-		// Create(context.Context, *Comment) error
+		Create(context.Context, *Comment) error
 		GetByPostId(context.Context, int64) ([]Comment, error)
 	}
 	Users interface {

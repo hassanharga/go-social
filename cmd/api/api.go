@@ -58,6 +58,7 @@ func (app *application) mount() http.Handler {
 				r.Get("/", app.getPostHandler)
 				r.Patch("/", app.updatePostHandler)
 				r.Delete("/", app.deletePostHandler)
+				r.Post("/comments", app.createCommentHandler)
 			})
 		})
 		// user routers
@@ -86,7 +87,7 @@ func (app *application) run() {
 	log.Fatal(srv.ListenAndServe())
 }
 
-func (app *application) jsonBadRequest(w http.ResponseWriter, status int, data any) error {
+func (app *application) jsonResponse(w http.ResponseWriter, status int, data any) error {
 	type envelope struct {
 		Data any `json:"data"`
 	}

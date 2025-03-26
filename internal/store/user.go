@@ -9,7 +9,7 @@ type User struct {
 	ID        int64  `json:"id"`
 	Username  string `json:"username"`
 	Email     string `json:"email"`
-	Password  int64  `json:"_"`
+	Password  string `json:"_"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
