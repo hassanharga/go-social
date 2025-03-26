@@ -5,7 +5,17 @@ import (
 	"github/hassanharga/go-social/internal/env"
 	"github/hassanharga/go-social/internal/store"
 	"log"
+
+	"github.com/joho/godotenv"
 )
+
+func init() {
+	// Load environment variables from .env file
+	log.Println("loading environment variables")
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+}
 
 func main() {
 	config := config{
