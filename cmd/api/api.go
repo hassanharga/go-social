@@ -2,6 +2,7 @@ package main
 
 import (
 	"github/hassanharga/go-social/internal/store"
+	"github/hassanharga/go-social/utils"
 	"log"
 	"net/http"
 	"time"
@@ -83,4 +84,11 @@ func (app *application) run() {
 	log.Printf("Starting server on %s", app.config.addr)
 	// Start the server and log any errors
 	log.Fatal(srv.ListenAndServe())
+}
+
+func (app *application) jsonBadRequest(w http.ResponseWriter, status int, data any) error {
+	type envelope struct {
+		Data any `json:"data"`
+	}
+	return utils.WriteJson(w, status, &envelope{Data: data})
 }
