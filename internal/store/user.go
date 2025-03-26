@@ -24,6 +24,10 @@ func (p *UserStore) Create(ctx context.Context, user *User) error {
 		VALUES ($1, $2, $3)
 		RETURNING id, created_at
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
 	err := p.db.QueryRowContext(
 		ctx,
 		query,
@@ -41,12 +45,15 @@ func (p *UserStore) Create(ctx context.Context, user *User) error {
 	return nil
 }
 
-func (p *UserStore) GetByUserId(ctx context.Context, id int64) (*User, error) {
+func (p *UserStore) GetById(ctx context.Context, id int64) (*User, error) {
 	query := `
 		SELECT id, username, email
 		FROM users
 		WHERE id = $1
 	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
 	user := &User{}
 	err := p.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID,

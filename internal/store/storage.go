@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrNotFound = errors.New("not found")
+	ErrConflict = errors.New("already exists")
 )
 
 const (
@@ -28,14 +29,19 @@ type Storage struct {
 	}
 	Users interface {
 		Create(context.Context, *User) error
-		GetByUserId(context.Context, int64) (*User, error)
+		GetById(context.Context, int64) (*User, error)
+	}
+	Followers interface {
+		Follow(ctx context.Context, followerId int64, userId int64) error
+		Unfollow(ctx context.Context, followerId int64, userId int64) error
 	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Posts:    &PostStore{db},
-		Comments: &CommentStore{db},
-		Users:    &UserStore{db},
+		Posts:     &PostStore{db},
+		Comments:  &CommentStore{db},
+		Users:     &UserStore{db},
+		Followers: &FollowerStore{db},
 	}
 }

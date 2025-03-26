@@ -25,3 +25,9 @@ func (app *application) notFoundError(w http.ResponseWriter, r *http.Request, er
 	log.Printf("Not Found Error: %s path: %s error: %s", r.Method, r.URL.Path, err.Error())
 	utils.WriteJsonError(w, http.StatusNotFound, "not found")
 }
+
+// conflictError is a helper function to handle conflict errors
+func (app *application) conflictError(w http.ResponseWriter, r *http.Request, err error) {
+	log.Printf("Conflict Error: %s path: %s error: %s", r.Method, r.URL.Path, err.Error())
+	utils.WriteJsonError(w, http.StatusConflict, err.Error())
+}
