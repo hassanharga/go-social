@@ -61,6 +61,7 @@ func (app *application) mount() http.Handler {
 				r.Post("/comments", app.createCommentHandler)
 			})
 		})
+		// user routers
 		r.Route("/users", func(r chi.Router) {
 			r.Route("/{id}", func(r chi.Router) {
 				// user middleware
@@ -70,8 +71,12 @@ func (app *application) mount() http.Handler {
 				r.Put("/follow", app.followUserHandler)
 				r.Put("/unfollow", app.unfollowUserHandler)
 			})
+
+			// user feed
+			r.Group(func(r chi.Router) {
+				r.Get("/feed", app.getUserFeedHandler)
+			})
 		})
-		// user routers
 
 	})
 
