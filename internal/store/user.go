@@ -9,9 +9,9 @@ type User struct {
 	ID        int64  `json:"id"`
 	Username  string `json:"username"`
 	Email     string `json:"email"`
-	Password  string `json:"_"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	Password  string `json:"_,omitempty"`
+	CreatedAt string `json:"created_at,omitempty"`
+	UpdatedAt string `json:"updated_at,omitempty"`
 }
 
 type UserStore struct {
@@ -39,4 +39,26 @@ func (p *UserStore) Create(ctx context.Context, user *User) error {
 	}
 
 	return nil
+}
+
+func (p *UserStore) GetByUserId(ctx context.Context, id int64) (*User, error) {
+	query := `
+		SELECT id, username, email
+		FROM users
+		WHERE id = $1
+	`
+	user := &User{}
+	err := p.db.QueryRowContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return user, nil
 }
