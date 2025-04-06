@@ -1,14 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"github/hassanharga/go-social/internal/store"
 	"github/hassanharga/go-social/utils"
 	"log"
 	"net/http"
 	"time"
 
+	"github/hassanharga/go-social/docs" // this is required for swagger
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type dbConfig struct {
@@ -23,6 +27,7 @@ type config struct {
 	db      dbConfig
 	env     string
 	version string
+	apiURL  string
 }
 
 type application struct {
@@ -44,9 +49,17 @@ func (app *application) mount() http.Handler {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Get("/", app.healthCheckHandler)
-
 	r.Route("/v1", func(r chi.Router) {
+
+		// swagger
+		docsUrl := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
+		r.Get("/swagger/*", httpSwagger.Handler(
+			httpSwagger.URL(docsUrl), //The url pointing to API definition
+		))
+
+		// check health
+		r.Get("/health", app.healthCheckHandler)
+
 		// post routers
 		r.Route("/posts", func(r chi.Router) {
 			r.Post("/", app.createPostHandler)
@@ -85,6 +98,11 @@ func (app *application) mount() http.Handler {
 
 // initializes the server chi and starts the HTTP server
 func (app *application) run() {
+	// docs
+	docs.SwaggerInfo.Version = app.config.version
+	docs.SwaggerInfo.Host = app.config.apiURL
+	docs.SwaggerInfo.BasePath = "/v1"
+
 	// initialize the server mux
 	mux := app.mount()
 
