@@ -22,7 +22,7 @@ type Storage struct {
 		GetById(context.Context, int64) (*Post, error)
 		Delete(context.Context, int64) error
 		Update(context.Context, *Post) error
-		GetFeed(context.Context, int64) ([]*PostWithMetadata, error)
+		GetFeed(context.Context, int64, PaginatedFeedQuery) ([]*PostWithMetadata, error)
 	}
 	Comments interface {
 		Create(context.Context, *Comment) error
