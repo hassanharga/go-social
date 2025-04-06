@@ -2,32 +2,56 @@ package main
 
 import (
 	"github/hassanharga/go-social/utils"
-	"log"
 	"net/http"
 )
 
-// internalServerError is a helper function to handle internal server errors
 func (app *application) internalServerError(w http.ResponseWriter, r *http.Request, err error) {
-	log.Printf("Internal Server Error: %s path: %s error: %s", r.Method, r.URL.Path, err.Error())
-	utils.WriteJsonError(w, http.StatusInternalServerError, "internal server error")
+	app.logger.Errorw("internal error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
+	utils.WriteJsonError(w, http.StatusInternalServerError, "the server encountered a problem")
 }
 
-// badRequestError is a helper function to handle bad request errors
 func (app *application) badRequestError(w http.ResponseWriter, r *http.Request, err error) {
-	log.Printf("Bad Request Error: %s path: %s error: %s", r.Method, r.URL.Path, err.Error())
-	utils.WriteJsonError(w, http.StatusBadRequest, err.Error())
+	app.logger.Warnf("bad request", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
+	utils.WriteJsonError(w, http.StatusBadRequest, err.Error())
 }
 
-// notFoundError is a helper function to handle not found errors
 func (app *application) notFoundError(w http.ResponseWriter, r *http.Request, err error) {
-	log.Printf("Not Found Error: %s path: %s error: %s", r.Method, r.URL.Path, err.Error())
+	app.logger.Warnf("not found error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+
 	utils.WriteJsonError(w, http.StatusNotFound, "not found")
 }
 
-// conflictError is a helper function to handle conflict errors
 func (app *application) conflictError(w http.ResponseWriter, r *http.Request, err error) {
-	log.Printf("Conflict Error: %s path: %s error: %s", r.Method, r.URL.Path, err.Error())
+	app.logger.Errorf("conflict response", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 	utils.WriteJsonError(w, http.StatusConflict, err.Error())
+}
+
+func (app *application) forbiddenError(w http.ResponseWriter, r *http.Request) {
+	app.logger.Warnw("forbidden", "method", r.Method, "path", r.URL.Path, "error")
+
+	utils.WriteJsonError(w, http.StatusForbidden, "forbidden")
+}
+
+func (app *application) unauthorizedError(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnf("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+
+	utils.WriteJsonError(w, http.StatusUnauthorized, "unauthorized")
+}
+
+func (app *application) unauthorizedBasicError(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnf("unauthorized basic error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+
+	w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+
+	utils.WriteJsonError(w, http.StatusUnauthorized, "unauthorized")
+}
+
+func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request, retryAfter string) {
+	app.logger.Warnw("rate limit exceeded", "method", r.Method, "path", r.URL.Path)
+
+	w.Header().Set("Retry-After", retryAfter)
+
+	utils.WriteJsonError(w, http.StatusTooManyRequests, "rate limit exceeded, retry after: "+retryAfter)
 }

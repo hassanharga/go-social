@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -30,10 +31,10 @@ func init() {
 
 //	@BasePath	/v1
 
-//	@securityDefinitions.apikey	ApiKeyAuth
-//	@in							header
-//	@name						Authorization
-//	@description				API Key for authorization
+// @securityDefinitions.apikey	ApiKeyAuth
+// @in							header
+// @name						Authorization
+// @description				API Key for authorization
 func main() {
 	config := config{
 		addr:    env.GetString("ADDR", ":3000"),
@@ -48,6 +49,12 @@ func main() {
 		},
 	}
 
+	// initialize the logger
+	logger := zap.Must(zap.NewProduction()).Sugar()
+	defer logger.Sync() // flushes buffer, if any
+
+	// initialize the database connection
+	logger.Info("Connecting to the database")
 	db, err := db.New(
 		config.db.addr,
 		config.db.maxOpenConns,
@@ -55,16 +62,18 @@ func main() {
 		config.db.maxIdleTime,
 	)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	defer db.Close()
-	log.Println("Connected to the database")
+
+	logger.Info("Connected to the database")
 
 	store := store.NewStorage(db)
 
 	app := &application{
 		config: config,
 		store:  store,
+		logger: logger,
 	}
 
 	// initialize the server mux

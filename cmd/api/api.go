@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github/hassanharga/go-social/internal/store"
 	"github/hassanharga/go-social/utils"
-	"log"
 	"net/http"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"go.uber.org/zap"
 )
 
 type dbConfig struct {
@@ -32,7 +32,8 @@ type config struct {
 
 type application struct {
 	config
-	store store.Storage
+	store  store.Storage
+	logger *zap.SugaredLogger
 }
 
 // initialize the server chi and create routes
@@ -115,9 +116,9 @@ func (app *application) run() {
 		IdleTimeout:  time.Second * 60,
 	}
 
-	log.Printf("Starting server on %s", app.config.addr)
+	app.logger.Infof("Starting server on %s", app.config.addr)
 	// Start the server and log any errors
-	log.Fatal(srv.ListenAndServe())
+	app.logger.Fatal(srv.ListenAndServe())
 }
 
 func (app *application) jsonResponse(w http.ResponseWriter, status int, data any) error {

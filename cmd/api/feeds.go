@@ -33,8 +33,6 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 		Sort:   "desc",
 	}
 
-	// log.Println("getUserFeedHandler", fq)
-
 	fq, err := fq.Parse(r)
 	if err != nil {
 		app.badRequestError(w, r, err)
