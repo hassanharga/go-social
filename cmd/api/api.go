@@ -22,12 +22,18 @@ type dbConfig struct {
 	maxIdleTime  string
 }
 
+type mailConfig struct {
+	expiry time.Duration
+}
+
 type config struct {
-	addr    string
-	db      dbConfig
-	env     string
-	version string
-	apiURL  string
+	addr        string
+	db          dbConfig
+	env         string
+	version     string
+	apiURL      string
+	frontendURL string
+	mail        mailConfig
 }
 
 type application struct {
@@ -77,6 +83,9 @@ func (app *application) mount() http.Handler {
 		})
 		// user routers
 		r.Route("/users", func(r chi.Router) {
+			// activate user
+			r.Put("/activate/{token}", app.activateUserHandler)
+
 			r.Route("/{id}", func(r chi.Router) {
 				// user middleware
 				r.Use(app.userContextMiddleware)
@@ -90,8 +99,13 @@ func (app *application) mount() http.Handler {
 			r.Group(func(r chi.Router) {
 				r.Get("/feed", app.getUserFeedHandler)
 			})
+
 		})
 
+		// auth routers
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/register", app.registerUserHandler)
+		})
 	})
 
 	return r

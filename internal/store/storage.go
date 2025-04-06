@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("not found")
-	ErrConflict = errors.New("already exists")
+	ErrNotFound          = errors.New("not found")
+	ErrConflict          = errors.New("already exists")
+	ErrDuplicateEmail    = errors.New("email already exists")
+	ErrDuplicateUsername = errors.New("username already exists")
 )
 
 const (
@@ -29,8 +31,10 @@ type Storage struct {
 		GetByPostId(context.Context, int64) ([]Comment, error)
 	}
 	Users interface {
-		Create(context.Context, *User) error
+		Create(context.Context, *sql.Tx, *User) error
+		CreateAndInvite(context.Context, *User, string, time.Duration) error
 		GetById(context.Context, int64) (*User, error)
+		Activate(context.Context, string) error
 	}
 	Followers interface {
 		Follow(ctx context.Context, followerId int64, userId int64) error
@@ -45,4 +49,19 @@ func NewStorage(db *sql.DB) Storage {
 		Users:     &UserStore{db},
 		Followers: &FollowerStore{db},
 	}
+}
+
+func withTx(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	if err := fn(tx); err != nil {
+		_ = tx.Rollback()
+
+		return err
+	}
+
+	return tx.Commit()
 }

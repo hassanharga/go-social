@@ -5,6 +5,7 @@ import (
 	"github/hassanharga/go-social/internal/env"
 	"github/hassanharga/go-social/internal/store"
 	"log"
+	"time"
 
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
@@ -37,15 +38,19 @@ func init() {
 // @description				API Key for authorization
 func main() {
 	config := config{
-		addr:    env.GetString("ADDR", ":3000"),
-		env:     env.GetString("ENV", "development"),
-		version: env.GetString("VERSION", "1.0.0"),
-		apiURL:  env.GetString("API_URL", "localhost:3000"),
+		addr:        env.GetString("ADDR", ":3000"),
+		env:         env.GetString("ENV", "development"),
+		version:     env.GetString("VERSION", "1.0.0"),
+		apiURL:      env.GetString("API_URL", "localhost:3000"),
+		frontendURL: env.GetString("FRONT_URL", "localhost:3001"),
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/social?sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
+		},
+		mail: mailConfig{
+			expiry: time.Hour * 24 * 3, // 3 days,
 		},
 	}
 
