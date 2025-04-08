@@ -183,7 +183,7 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusCreated, token); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, token); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
