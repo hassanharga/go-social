@@ -125,8 +125,8 @@ func (app *application) mount() http.Handler {
 				r.Use(app.postContextMiddleware)
 
 				r.Get("/", app.getPostHandler)
-				r.Patch("/", app.updatePostHandler)
-				r.Delete("/", app.deletePostHandler)
+				r.Patch("/", app.checkPostOwnership(store.MODERATOR, app.updatePostHandler))
+				r.Delete("/", app.checkPostOwnership(store.ADMIN, app.deletePostHandler))
 				r.Post("/comments", app.createCommentHandler)
 			})
 		})

@@ -18,7 +18,7 @@ type User struct {
 	CreatedAt string   `json:"created_at"`
 	IsActive  bool     `json:"is_active"`
 	RoleID    int64    `json:"role_id"`
-	// Role      Role     `json:"role"`
+	Role      Role     `json:"role"`
 }
 
 type password struct {
@@ -47,24 +47,20 @@ type UserStore struct {
 }
 
 func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
+
 	query := `
-		INSERT INTO users (username, password, email) VALUES 
-    ($1, $2, $3)
-    RETURNING id, created_at
+		INSERT INTO users (username, password, email, role_id) VALUES
+	  ($1, $2, $3, (SELECT id FROM roles WHERE name = $4))
+	  RETURNING id, created_at
 	`
-	// query := `
-	// 	INSERT INTO users (username, password, email, role_id) VALUES
-	//   ($1, $2, $3, (SELECT id FROM roles WHERE name = $4))
-	//   RETURNING id, created_at
-	// `
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	// role := user.Role.Name
-	// if role == "" {
-	// 	role = "user"
-	// }
+	role := user.Role.Name
+	if role == "" {
+		role = "user"
+	}
 
 	err := tx.QueryRowContext(
 		ctx,
@@ -72,7 +68,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 		user.Username,
 		user.Password.hash,
 		user.Email,
-		// role,
+		role,
 	).Scan(
 		&user.ID,
 		&user.CreatedAt,
@@ -107,9 +103,10 @@ func (s *UserStore) Delete(ctx context.Context, userID int64) error {
 
 func (s *UserStore) GetById(ctx context.Context, id int64) (*User, error) {
 	query := `
-		SELECT id, username, email
-		FROM users
-		WHERE id = $1
+		SELECT u.id, u.username, u.email, roles.*
+		FROM users u
+		JOIN roles ON u.role_id = roles.id
+		WHERE u.id = $1 AND u.is_active = true
 	`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -119,6 +116,10 @@ func (s *UserStore) GetById(ctx context.Context, id int64) (*User, error) {
 		&user.ID,
 		&user.Username,
 		&user.Email,
+		&user.Role.ID,
+		&user.Role.Name,
+		&user.Role.Level,
+		&user.Role.Description,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
