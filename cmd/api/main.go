@@ -3,6 +3,7 @@ package main
 import (
 	"github/hassanharga/go-social/internal/db"
 	"github/hassanharga/go-social/internal/env"
+	"github/hassanharga/go-social/internal/mailer"
 	"github/hassanharga/go-social/internal/store"
 	"log"
 	"time"
@@ -50,7 +51,11 @@ func main() {
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
 		mail: mailConfig{
-			expiry: time.Hour * 24 * 3, // 3 days,
+			expiry:    time.Hour * 24 * 3, // 3 days,
+			fromEmail: env.GetString("FROM_EMAIL", "noreply@localhost"),
+			sendGrid: sendGridConfig{
+				apiKey: env.GetString("SENDGRID_API_KEY", ""),
+			},
 		},
 	}
 
@@ -73,12 +78,16 @@ func main() {
 
 	logger.Info("Connected to the database")
 
+	// initialize the mailer
+	mailer := mailer.NewSendGridMailer(config.mail.sendGrid.apiKey, config.mail.fromEmail)
+
 	store := store.NewStorage(db)
 
 	app := &application{
 		config: config,
 		store:  store,
 		logger: logger,
+		mailer: mailer,
 	}
 
 	// initialize the server mux

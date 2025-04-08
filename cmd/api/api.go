@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github/hassanharga/go-social/internal/mailer"
 	"github/hassanharga/go-social/internal/store"
 	"github/hassanharga/go-social/utils"
 	"net/http"
@@ -22,8 +23,14 @@ type dbConfig struct {
 	maxIdleTime  string
 }
 
+type sendGridConfig struct {
+	apiKey string
+}
+
 type mailConfig struct {
-	expiry time.Duration
+	expiry    time.Duration
+	fromEmail string
+	sendGrid  sendGridConfig
 }
 
 type config struct {
@@ -40,6 +47,7 @@ type application struct {
 	config
 	store  store.Storage
 	logger *zap.SugaredLogger
+	mailer mailer.Client
 }
 
 // initialize the server chi and create routes
