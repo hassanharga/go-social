@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github/hassanharga/go-social/internal/auth"
 	"github/hassanharga/go-social/internal/db"
 	"github/hassanharga/go-social/internal/env"
 	"github/hassanharga/go-social/internal/mailer"
@@ -57,7 +58,19 @@ func main() {
 				apiKey: env.GetString("SENDGRID_API_KEY", ""),
 			},
 			mailTrap: mailTrapConfig{
-				apiKey: env.GetString("MAILTRAP_API_KEY", ""),
+				apiKey: env.GetString("MAILTRAP_API_KEY", "12121"),
+			},
+		},
+		auth: authConfig{
+			basic: basicConfig{
+				user:     env.GetString("BASIC_AUTH_USER", "admin"),
+				password: env.GetString("BASIC_AUTH_PASSWORD", "adminpassword"),
+			},
+			jwt: jwtConfig{
+				secret: env.GetString("JWT_SECRET", "secret"),
+				aud:    env.GetString("JWT_AUD", "goSocial"),
+				iss:    env.GetString("JWT_ISS", "goSocial"),
+				exp:    time.Hour * 24 * 3, // 3 days
 			},
 		},
 	}
@@ -84,18 +97,23 @@ func main() {
 	// initialize the mailer
 	logger.Info("initialize to the mailer")
 	// mailer := mailer.NewSendgrid(config.mail.sendGrid.apiKey, config.mail.fromEmail)
-	mailer, err := mailer.NewMailTrapClient(config.mail.sendGrid.apiKey, config.mail.fromEmail)
+	mailer, err := mailer.NewMailTrapClient(config.mail.mailTrap.apiKey, config.mail.fromEmail)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
+	// initialize the JWT authenticator
+	jwtConfig := auth.NewJwtConfig(config.auth.jwt.secret, config.auth.jwt.aud, config.auth.jwt.iss)
+
+	// initialize the store
 	store := store.NewStorage(db)
 
 	app := &application{
-		config: config,
-		store:  store,
-		logger: logger,
-		mailer: mailer,
+		config:        config,
+		store:         store,
+		logger:        logger,
+		mailer:        mailer,
+		authenticator: jwtConfig,
 	}
 
 	// initialize the server mux

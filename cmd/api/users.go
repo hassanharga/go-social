@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github/hassanharga/go-social/internal/store"
-	"github/hassanharga/go-social/utils"
 	"net/http"
 	"strconv"
 
@@ -55,17 +54,16 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 //	@Security		ApiKeyAuth
 //	@Router			/users/{id}/follow [put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
-	followedUser := getUserFromCtx(r)
-	// TODO: get user from auth
-	var payload FollowedUser
+	followerUser := getUserFromCtx(r)
 
-	if err := utils.ReadJson(w, r, &payload); err != nil {
+	followedId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
 
 	ctx := r.Context()
-	err := app.store.Followers.Follow(ctx, followedUser.ID, payload.UserID)
+	err = app.store.Followers.Follow(ctx, followerUser.ID, followedId)
 	if err != nil {
 		if errors.Is(err, store.ErrConflict) {
 			app.conflictError(w, r, err)
@@ -94,17 +92,16 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Security		ApiKeyAuth
 //	@Router			/users/{id}/unfollow [put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
-	unfollowedUser := getUserFromCtx(r)
-	// TODO: get user from auth
-	var payload FollowedUser
+	followerUser := getUserFromCtx(r)
 
-	if err := utils.ReadJson(w, r, &payload); err != nil {
+	followedId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}
 
 	ctx := r.Context()
-	err := app.store.Followers.Unfollow(ctx, unfollowedUser.ID, payload.UserID)
+	err = app.store.Followers.Unfollow(ctx, followerUser.ID, followedId)
 	if err != nil {
 
 		app.internalServerError(w, r, err)
