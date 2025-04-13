@@ -5,6 +5,7 @@ import (
 	"github/hassanharga/go-social/internal/db"
 	"github/hassanharga/go-social/internal/env"
 	"github/hassanharga/go-social/internal/mailer"
+	"github/hassanharga/go-social/internal/ratelimiter"
 	"github/hassanharga/go-social/internal/store"
 	"github/hassanharga/go-social/internal/store/cache"
 	"log"
@@ -79,7 +80,12 @@ func main() {
 			addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
 			password: env.GetString("REDIS_PASSWORD", ""),
 			db:       env.GetInt("REDIS_DB", 0),
-			enabled:  env.GetBool("REDIS_ENABLED", false),
+			enabled:  env.GetBool("REDIS_ENABLED", true),
+		},
+		rateLimiter: ratelimiter.Config{
+			RequestsPerTimeFrame: env.GetInt("REQUESTS_PER_TIME_FRAME", 100),
+			TimeFrame:            time.Second * 5,
+			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
 		},
 	}
 
@@ -124,6 +130,12 @@ func main() {
 		logger.Info("Connected to the cache database")
 	}
 
+	// init the rate limiter
+	rateLimiter := ratelimiter.NewFixedWindowLimiter(
+		config.rateLimiter.RequestsPerTimeFrame,
+		config.rateLimiter.TimeFrame,
+	)
+
 	cacheStorage := cache.NewRedisStorage(rdb)
 
 	app := &application{
@@ -133,6 +145,7 @@ func main() {
 		mailer:        mailer,
 		authenticator: jwtConfig,
 		cacheStorage:  cacheStorage,
+		rateLimiter:   rateLimiter,
 	}
 
 	// initialize the server mux

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github/hassanharga/go-social/internal/auth"
 	"github/hassanharga/go-social/internal/mailer"
+	"github/hassanharga/go-social/internal/ratelimiter"
 	"github/hassanharga/go-social/internal/store"
 	"github/hassanharga/go-social/internal/store/cache"
 	"github/hassanharga/go-social/utils"
@@ -80,6 +81,7 @@ type config struct {
 	mail        mailConfig
 	auth        authConfig
 	cache       cacheConfig
+	rateLimiter ratelimiter.Config
 }
 
 type application struct {
@@ -89,6 +91,7 @@ type application struct {
 	mailer        mailer.Client
 	authenticator auth.Authenticator
 	cacheStorage  cache.Storage
+	rateLimiter   ratelimiter.Limiter
 }
 
 // initialize the server chi and create routes
@@ -113,6 +116,7 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(app.RateLimiterMiddleware)
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
