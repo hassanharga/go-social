@@ -136,5 +136,5 @@ func main() {
 	}
 
 	// initialize the server mux
-	app.run()
+	logger.Fatal(app.run())
 }

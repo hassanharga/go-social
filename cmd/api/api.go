@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"github/hassanharga/go-social/internal/auth"
 	"github/hassanharga/go-social/internal/mailer"
@@ -8,6 +10,9 @@ import (
 	"github/hassanharga/go-social/internal/store/cache"
 	"github/hassanharga/go-social/utils"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github/hassanharga/go-social/docs" // this is required for swagger
@@ -173,7 +178,7 @@ func (app *application) mount() http.Handler {
 }
 
 // initializes the server chi and starts the HTTP server
-func (app *application) run() {
+func (app *application) run() error {
 	// docs
 	docs.SwaggerInfo.Version = app.config.version
 	docs.SwaggerInfo.Host = app.config.apiURL
@@ -191,9 +196,38 @@ func (app *application) run() {
 		IdleTimeout:  time.Second * 60,
 	}
 
-	app.logger.Infof("Starting server on %s", app.config.addr)
+	shutdown := make(chan error)
+
+	go func() {
+		quit := make(chan os.Signal, 1)
+
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		s := <-quit
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		app.logger.Infow("signal caught", "signal", s.String())
+
+		shutdown <- srv.Shutdown(ctx)
+	}()
+
+	app.logger.Infow("server has started", "addr", app.config.addr, "env", app.config.env)
+
 	// Start the server and log any errors
-	app.logger.Fatal(srv.ListenAndServe())
+	err := srv.ListenAndServe()
+	if !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+
+	err = <-shutdown
+	if err != nil {
+		return err
+	}
+
+	app.logger.Infow("server has stopped", "addr", app.config.addr, "env", app.config.env)
+
+	return nil
 }
 
 func (app *application) jsonResponse(w http.ResponseWriter, status int, data any) error {
