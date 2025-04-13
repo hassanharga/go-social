@@ -5,6 +5,7 @@ import (
 	"github/hassanharga/go-social/internal/auth"
 	"github/hassanharga/go-social/internal/mailer"
 	"github/hassanharga/go-social/internal/store"
+	"github/hassanharga/go-social/internal/store/cache"
 	"github/hassanharga/go-social/utils"
 	"net/http"
 	"time"
@@ -57,6 +58,13 @@ type authConfig struct {
 	jwt   jwtConfig
 }
 
+type cacheConfig struct {
+	addr     string
+	password string
+	db       int
+	enabled  bool
+}
+
 type config struct {
 	addr        string
 	db          dbConfig
@@ -66,6 +74,7 @@ type config struct {
 	frontendURL string
 	mail        mailConfig
 	auth        authConfig
+	cache       cacheConfig
 }
 
 type application struct {
@@ -74,6 +83,7 @@ type application struct {
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
+	cacheStorage  cache.Storage
 }
 
 // initialize the server chi and create routes

@@ -6,9 +6,11 @@ import (
 	"github/hassanharga/go-social/internal/env"
 	"github/hassanharga/go-social/internal/mailer"
 	"github/hassanharga/go-social/internal/store"
+	"github/hassanharga/go-social/internal/store/cache"
 	"log"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
@@ -73,6 +75,12 @@ func main() {
 				exp:    time.Hour * 24 * 3, // 3 days
 			},
 		},
+		cache: cacheConfig{
+			addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
+			password: env.GetString("REDIS_PASSWORD", ""),
+			db:       env.GetInt("REDIS_DB", 0),
+			enabled:  env.GetBool("REDIS_ENABLED", false),
+		},
 	}
 
 	// initialize the logger
@@ -108,12 +116,23 @@ func main() {
 	// initialize the store
 	store := store.NewStorage(db)
 
+	// init cache
+	logger.Info("init cache")
+	var rdb *redis.Client
+	if config.cache.enabled {
+		rdb = cache.NewRedisClient(config.cache.addr, config.cache.password, config.cache.db)
+		logger.Info("Connected to the cache database")
+	}
+
+	cacheStorage := cache.NewRedisStorage(rdb)
+
 	app := &application{
 		config:        config,
 		store:         store,
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtConfig,
+		cacheStorage:  cacheStorage,
 	}
 
 	// initialize the server mux
