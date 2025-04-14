@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"expvar"
 	"fmt"
 	"github/hassanharga/go-social/internal/auth"
 	"github/hassanharga/go-social/internal/mailer"
@@ -124,8 +125,10 @@ func (app *application) mount() http.Handler {
 
 	r.Route("/v1", func(r chi.Router) {
 
+		// operations
 		// check health
 		r.With(app.basicMiddleware()).Get("/health", app.healthCheckHandler)
+		r.With(app.basicMiddleware(), app.authTokenMiddleware).Get("/debug/vars", expvar.Handler().ServeHTTP)
 
 		// swagger
 		docsUrl := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)

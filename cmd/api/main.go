@@ -1,6 +1,7 @@
 package main
 
 import (
+	"expvar"
 	"github/hassanharga/go-social/internal/auth"
 	"github/hassanharga/go-social/internal/db"
 	"github/hassanharga/go-social/internal/env"
@@ -9,6 +10,7 @@ import (
 	"github/hassanharga/go-social/internal/store"
 	"github/hassanharga/go-social/internal/store/cache"
 	"log"
+	"runtime"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -137,6 +139,15 @@ func main() {
 	)
 
 	cacheStorage := cache.NewRedisStorage(rdb)
+
+	// metric collection
+	expvar.NewString("version").Set(config.version)
+	expvar.Publish("database", expvar.Func(func() any {
+		return db.Stats()
+	}))
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
 
 	app := &application{
 		config:        config,
