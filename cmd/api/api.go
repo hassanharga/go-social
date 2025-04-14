@@ -208,7 +208,7 @@ func (app *application) run() error {
 	go func() {
 		quit := make(chan os.Signal, 1)
 
-		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 		s := <-quit
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
