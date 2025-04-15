@@ -1,22 +1,23 @@
 package main
 
 import (
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github/hassanharga/go-social/internal/auth"
 	// "github/hassanharga/go-social/internal/ratelimiter"
 	"github/hassanharga/go-social/internal/store"
 	"github/hassanharga/go-social/internal/store/cache"
-
-	"go.uber.org/zap"
 )
 
 func newTestApplication(t *testing.T, cfg config) *application {
 	t.Helper()
 
-	logger := zap.NewNop().Sugar()
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	// logger := zap.NewNop().Sugar()
 	// Uncomment to enable logs
 	// logger := zap.Must(zap.NewProduction()).Sugar()
 	mockStore := store.NewMockStore()

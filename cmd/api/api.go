@@ -11,6 +11,7 @@ import (
 	"github/hassanharga/go-social/internal/store"
 	"github/hassanharga/go-social/internal/store/cache"
 	"github/hassanharga/go-social/utils"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,7 +24,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	httpSwagger "github.com/swaggo/http-swagger"
-	"go.uber.org/zap"
 )
 
 type dbConfig struct {
@@ -88,7 +88,7 @@ type config struct {
 type application struct {
 	config
 	store         store.Storage
-	logger        *zap.SugaredLogger
+	logger        *slog.Logger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
 	cacheStorage  cache.Storage
@@ -214,12 +214,12 @@ func (app *application) run() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		app.logger.Infow("signal caught", "signal", s.String())
+		app.logger.Info("signal caught", "signal", s.String())
 
 		shutdown <- srv.Shutdown(ctx)
 	}()
 
-	app.logger.Infow("server has started", "addr", app.config.addr, "env", app.config.env)
+	app.logger.Info("server has started", "addr", app.config.addr, "env", app.config.env)
 
 	// Start the server and log any errors
 	err := srv.ListenAndServe()
@@ -232,7 +232,7 @@ func (app *application) run() error {
 		return err
 	}
 
-	app.logger.Infow("server has stopped", "addr", app.config.addr, "env", app.config.env)
+	app.logger.Info("server has stopped", "addr", app.config.addr, "env", app.config.env)
 
 	return nil
 }

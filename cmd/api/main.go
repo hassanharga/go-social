@@ -10,12 +10,13 @@ import (
 	"github/hassanharga/go-social/internal/store"
 	"github/hassanharga/go-social/internal/store/cache"
 	"log"
+	"log/slog"
+	"os"
 	"runtime"
 	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
-	"go.uber.org/zap"
 )
 
 func init() {
@@ -92,11 +93,14 @@ func main() {
 	}
 
 	// initialize the logger
-	logger := zap.Must(zap.NewProduction()).Sugar()
-	defer logger.Sync() // flushes buffer, if any
+	// logger := zap.Must(zap.NewProduction()).Sugar()
+	// defer logger.Sync() // flushes buffer, if any
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))
+	slog.SetDefault(logger)
 
 	// initialize the database connection
 	logger.Info("Connecting to the database")
+
 	db, err := db.New(
 		config.db.addr,
 		config.db.maxOpenConns,
@@ -104,7 +108,9 @@ func main() {
 		config.db.maxIdleTime,
 	)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Error("failed to connect to the database", "error", err)
+		os.Exit(1)
+		// log.Fatal(err)
 	}
 	defer db.Close()
 
@@ -115,7 +121,9 @@ func main() {
 	// mailer := mailer.NewSendgrid(config.mail.sendGrid.apiKey, config.mail.fromEmail)
 	mailer, err := mailer.NewMailTrapClient(config.mail.mailTrap.apiKey, config.mail.fromEmail)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Error("failed to connect to the mailer", "error", err)
+		os.Exit(1)
+		// log.Fatal(err)
 	}
 
 	// initialize the JWT authenticator
@@ -160,5 +168,8 @@ func main() {
 	}
 
 	// initialize the server mux
-	logger.Fatal(app.run())
+	if err := app.run(); err != nil {
+		logger.Error("server error", "error", err)
+		log.Fatal(err)
+	}
 }
